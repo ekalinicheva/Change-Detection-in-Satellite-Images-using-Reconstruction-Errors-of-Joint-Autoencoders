@@ -3,21 +3,21 @@ import torch
 import torch.nn.functional as F
 
 
-class L2(nn.Module):
-    def __init__(self):
-        super(L2, self).__init__()
-
-    def __call__(self, tensor):
-        x = tensor.clone()
-        for l in range(list(x.size())[0]):
-            line = x[l].clone()
-            line=line/((line.pow(2).sum()).pow(0.5))
-            x[l]=line
-        return x
+#class L2(nn.Module):
+#    def __init__(self):
+#        super(L2, self).__init__()
+#
+#    def __call__(self, tensor):
+#        x = tensor.clone()
+#        for l in range(list(x.size())[0]):
+#            line = x[l].clone()
+#            line=line/((line.pow(2).sum()).pow(0.5))
+#            x[l]=line
+#        return x
 
 #1st Autoencoder
 class Encoder(nn.Module):
-    def __init__(self, bands_nb, patch_size):
+    def __init__(self, bands_nb, patch_size, nb_features):
         input_size = (bands_nb, patch_size, patch_size)
 
         super(Encoder, self).__init__()
@@ -34,7 +34,7 @@ class Encoder(nn.Module):
         self.bn14 = nn.BatchNorm2d(64)
         self.activation1 = nn.ReLU()
         self.activation2 = nn.Sigmoid()
-        self.l2norm = L2()
+        #self.l2norm = L2()
 
 
     def forward(self, x):
@@ -42,7 +42,7 @@ class Encoder(nn.Module):
         x11 = F.relu(self.bn11(self.conv11(x)))
         x12 = F.relu(self.bn12(self.conv12(x11)))
         x13 = F.relu(self.bn13(self.conv13(x12)))
-        x14 = F.relu(x13)
+        x14 = self.conv14(x13)
         size14 = x14.size()
         x14_ = x14.view(size14[0], size14[1], size14[2]*size14[3])
         x14_ = F.normalize(x14_, p=2, dim=2)
@@ -53,7 +53,7 @@ class Encoder(nn.Module):
 
 
 class Decoder(nn.Module):
-    def __init__(self, bands_nb, patch_size):
+    def __init__(self, bands_nb, patch_size, nb_features):
         input_size = (bands_nb, patch_size, patch_size)
 
         super(Decoder, self).__init__()
